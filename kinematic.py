@@ -13,6 +13,8 @@ from enum import Enum
 # Varibles that can be change by the user such as the object mass, enviroment (air resistance ,graviattional force, friction)
 MASS = 0
 V_INIT = 0
+SIZE = 
+RADIUS = 0.5 * SIZE
 
 # Air density of the planet
 EARTH_AIR_DENSITY = 1.293 #kg m^-3
@@ -30,11 +32,45 @@ VENUS_GRAVITY = 8.9     #m/s^2
 JUPITER_GRAVITY = 23.1  #m/s^2
 all_gravities = np.array([9.81, 1.6, 3.71, 8.9, 23.1]) # Putting all gravities from current planets into list
 
+#Drag coeffiencinnt from https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/shape-effects-on-drag-2/
+SPHERE_DRAG_COE = .5
+AIRFOIL_DRAG_COE = .045
+BULLET_DRAG_COE = .295
+FLAT_PLATE_DRAG_COE = 1.28
+PRISM_DRAG_COE = 1.14
+
+#
+PRISM_BASE = SIZE * SIZE
+PRISM_HEIGHT = 1.5 * SIZE
+
+
+SA_Sphere = 4 * np.pi * SIZE**2
+
+SA_BULLET_CONE = np.pi * RADIUS * np.sqrt(SIZE**2 + RADIUS**2)
+SA_BULLET_CYL = 2 * np * RADIUS * SIZE + np.pi * RADIUS**2
+SA_BULLET = SA_BULLET_CONE + SA_BULLET_CYL
+
+
+
+SA_PRISM =  
+
+
+
+#
+curr_velo = 0.0
+
+
+
 # List to hold selected planet information
 selected_planet = []
+selected_shape = []
 
 # need to add function to account for
     #   DRAG
+    def drag_at_time(curr_velo):
+        D = selected_shape * selected_planet * ((curr_velo**2)/2) * 
+
+
     #   WEIGHT
     def net_force(obj_weight):
         return (obj_weight * selected_planet[1])

@@ -42,6 +42,13 @@ FLAT_PLATE_DRAG_COE = 1.28
 PRISM_DRAG_COE = 1.14
 
 #Cross section area
+
+global Shape_List
+global Airfoil_CS
+global Bullet_CS
+global Flat_PLATE_CS
+global Prism_DRAG_CS
+
 Sphere_CS = np.pi * Radius**2
 Airfoil_CS = Size * 0.25 * Size
 Bullet_CS = np.pi * Radius**2
@@ -62,9 +69,6 @@ Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DR
 user_planet_index = 0
 user_shape_index = 0
 
-
-x_points = []
-y_points = []
 t_points = []
 
 
@@ -73,7 +77,7 @@ t_points = []
 # need to add function to account for
     #   DRAG
 def positionDrag(r, t):
-
+    #print(GRAVITY_LIST[user_planet_index])
     #change in time
     dt = t - r[6] 
 
@@ -92,7 +96,7 @@ def positionDrag(r, t):
    #F_air_y = F_air / Mass * np.sin(theta)
 
     #calculate the gravity
-    F_gravity =  -9.81 #GRAVITY_LIST[user_planet_index]
+    F_gravity =  - GRAVITY_LIST[user_planet_index]
 
    # F_net_y = F_gravity + F_air_y
 
@@ -175,9 +179,16 @@ def calcMaxHeightTime(theta):
     return time
 
 def updateSize():
-
-    print("HI")
+    global Shape_List
+    global Airfoil_CS
+    global Bullet_CS
+    global Flat_PLATE_CS
+    global Prism_DRAG_CS
+    global Shape_List
+    
     Radius = 0.5 * Size
+
+    print("r = ", Radius)
 
     #Cross section area
     Sphere_CS = np.pi * Radius**2
@@ -188,8 +199,36 @@ def updateSize():
 
     Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DRAG_CS],  float)
 
-if __name__ == '__main__':
+def changeShape(r, h, shape):
+    global user_shape_index
 
+    x_points = []
+    y_points = []
+    user_shape_index = shape
+    t = 0
+    isbeing = True
+
+    print("The shape", user_shape_index)
+    print("The planet", user_planet_index)
+
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_points.append(r[0])
+        y_points.append(r[1])
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+    return x_points, y_points
+    
+
+
+
+if __name__ == '__main__':
     theta = np.radians(30)
     x_init = 0
     y_init = 0
@@ -233,8 +272,36 @@ if __name__ == '__main__':
     Mass = .45          #mass of a soccer ball
     Size = 0.113 * 2    # d=iamater of a soccer ball
 
-    #print(Shape_List[0])
+    x_ball_earth = []
+    y_ball_earth = []
 
+    x_ball_moon = []
+    y_ball_moon = []
+
+    x_ball_mars = []
+    y_ball_mars = []
+
+    x_ball_venus = []
+    y_ball_venus = []
+
+    x_ball_jup = []
+    y_ball_jup = []
+
+    x_airfoil = []
+    y_airfoil = []
+
+    x_bullet = []
+    y_bullet = []
+
+    x_flat = []
+    y_flat = []
+
+    x_prism = []
+    y_prism = []
+
+
+    #print(Shape_List[0])
+    print("r = ", Radius)
     updateSize()
 
     print(np.pi * (Size/2)**2)
@@ -261,7 +328,7 @@ if __name__ == '__main__':
     b = 20 #MaxTime
 
     t = 0
-    N = 1000
+    N = 10000
     h = (b-a)/N
 
     tpoints = np.arange(a, b, h)
@@ -270,8 +337,8 @@ if __name__ == '__main__':
     
     while (r[1] >= 0 or isbeing == True):
     
-        x_points.append(r[0])
-        y_points.append(r[1])
+        x_ball_earth.append(r[0])
+        y_ball_earth.append(r[1])
         t_points.append(t)
 
         #r = rk4(r, t, h)
@@ -280,27 +347,153 @@ if __name__ == '__main__':
 
         t += h
         isbeing = False
+
+    #reset
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 2
+
+    while (r[1] >= 0 or isbeing == True):
     
-    
-    
-    """
-    for t in tpoints:
-        x_points.append(r[0])
-        y_points.append(r[1])
+        x_ball_moon.append(r[0])
+        y_ball_moon.append(r[1])
         t_points.append(t)
 
-        
-        k1 = h * positionDrag(r, t)
-        k2 = h * positionDrag((r + 0.5 * k1), (t + 0.5 * h))
-        k3 = h * positionDrag((r + 0.5 * k2), (t + 0.5 * h))
-        k4 = h * positionDrag((r+k3), (t+h))
- 
-        r = r + (k1+ 2*k2 + 2*k3 + k4) /6
-    """
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 3
+
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_ball_mars.append(r[0])
+        y_ball_mars.append(r[1])
+        t_points.append(t)
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 4
+
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_ball_venus.append(r[0])
+        y_ball_venus.append(r[1])
+        t_points.append(t)
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 5
+
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_ball_jup.append(r[0])
+        y_ball_jup.append(r[1])
+        t_points.append(t)
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+    #CHANGE OF SHAPE
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 1
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    x_airfoil, y_airfoil = changeShape(r, h, 1)
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    x_bullet, y_bullet = changeShape(r, h, 2)
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    x_flat, y_flat = changeShape(r, h, 3)
+
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    x_prism, y_prism = changeShape(r, h, 4)
+
+
+    #change in atomshere
+    user_planet_index = 2
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    x_airfoil_moon, y_airfoil_moon = changeShape(r, h, 1)
+
 
 
     # PLOT THE GIVEN INFORMATION
-    plt.plot(x_points, y_points)
+
+    #ALL PLANET SAME SAHPE
+    plt.plot(x_ball_earth, y_ball_earth, 'b', label="EARTH",)
+    plt.plot(x_ball_moon, y_ball_moon, 'k', label="MOON")
+    plt.plot(x_ball_mars, y_ball_mars, 'r', label="MARS")
+    plt.plot(x_ball_venus, y_ball_venus, 'm', label="VENUS")
+    plt.plot(x_ball_jup, y_ball_jup, 'y', label="JUPITER")
+    plt.xlabel("Distance in x-axis (m)")
+    plt.ylabel("Distance in y-axis (m)")
+    plt.title("Soccer Ball Kicked on Different Planets")
+    plt.legend(loc='upper right')
+    plt.grid()
+
+    # JUST VENUS
+    plt.figure()
+    plt.plot(x_ball_venus, y_ball_venus, 'm', label="VENUS")
+    plt.xlabel("Distance in x-axis (m)")
+    plt.ylabel("Distance in y-axis (m)")
+    plt.title("Soccer Ball Kicked on Venus")
+    plt.legend(loc='upper right')
+    plt.grid()
+
+    #DIFFERNET SHAPE ON EARTH
+    plt.figure()
+    plt.plot(x_ball_earth, y_ball_earth, 'b', label="SHPERE",)
+    plt.plot(x_airfoil, y_airfoil, label="AIRFOIL")
+    plt.plot(x_bullet, y_bullet, label="BULLET")
+    plt.plot(x_flat, y_flat, label="FLAT_PLATE")
+    plt.plot(x_prism, y_prism, label="REC_PRISM")
+    plt.xlabel("Distance in x-axis (m)")
+    plt.ylabel("Distance in y-axis (m)")
+    plt.title("Differnt Shape Object Launched from Earth")
+    plt.legend(loc='upper right')
+    plt.grid()
+
+    #Airfoil on moon
+    plt.figure()
+    plt.plot(x_airfoil_moon, y_airfoil_moon, label="AIRFOIL")
+    plt.plot(x_ball_moon, y_ball_moon, 'k', label="MOON")
+    plt.xlabel("Distance in x-axis (m)")
+    plt.ylabel("Distance in y-axis (m)")
+    plt.title("Differnt Shape Object Launched from Earth")
+    plt.legend(loc='upper right')
+    plt.grid()
+
+
     #plt.plot(t_points, x_points, 'ro')
     plt.show()
     # SOME HOW GET THE WEBSITE THE INFORMATION

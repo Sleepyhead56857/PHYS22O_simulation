@@ -12,9 +12,10 @@ import matplotlib.pyplot as plt
 
 # Varibles that can be change by the user such as the object mass, enviroment (air resistance ,graviattional force, friction)
 Mass = 5
-V_Init = 100
+V_Init = 30
 Size = 1
 RADIUS = 0.5 * Size
+theta = 0
 
 # Air density of the planet
 NULL_DENSITY = 0
@@ -41,7 +42,12 @@ FLAT_PLATE_DRAG_COE = 1.28
 PRISM_DRAG_COE = 1.14
 
 #Cross section area
-SPHERE_CS = np.pi * Size**2
+SPHERE_CS = np.pi * RADIUS**2
+AIRFOIL_CS = 
+BULLET_CS = np.pi * RADIUS**2
+FLAT_PLATE_CS = Size * Size 
+PRISM_DRAG_COE = Size * Size 
+
 
 SA_BULLET_CONE = np.pi * RADIUS * np.sqrt(Size**2 + RADIUS**2)
 SA_BULLET_CYL = 2 * np.pi * RADIUS * Size + np.pi * RADIUS**2
@@ -74,40 +80,44 @@ def positionDrag(r, t):
     #change in time
     dt = t - r[6] 
 
-    # compute the velocity
-    velo_x = r[4]/Mass
-    velo_y = r[5]/Mass
 
-
-    magnitude_velocity = np.sqrt(velo_x **2 + velo_y**2)
+    velocity = np.sqrt(r[2] **2 + r[3]**2)
 
     #calculate the unit vector of the x ad y axis
-    unit_vector_x = velo_x / magnitude_velocity
-    unit_vector_y = velo_y / magnitude_velocity
+    #unit_vector_x = velo_x / magnitude_velocity
+    #unit_vector_y = velo_y / magnitude_velocity
 
     #F_air = -1/2 * p(air density) * Area * drag_Coeffeient * | v |^2 * unit_vector
-    F_air = - AIR_DENSITY_LIST[user_planet_index] * SHAPE_LIST[user_shape_index] * DRAG_LIST[user_shape_index] *(magnitude_velocity**2)
+    F_air = -  0.5 * AIR_DENSITY_LIST[user_planet_index] * SHAPE_LIST[user_shape_index] * DRAG_LIST[user_shape_index] * velocity**2#*(magnitude_velocity**2)
 
     # comute the air resistance for x and y
-    F_air_x = F_air * (velo_x/ magnitude_velocity)
-    F_air_y = F_air * (velo_y/ magnitude_velocity)
+   #F_air_x = F_air / Mass * np.cos(theta)
+   #F_air_y = F_air / Mass * np.sin(theta)
 
     #calculate the gravity
-    F_gravity = Mass * GRAVITY_LIST[user_planet_index]
+    F_gravity =  -9.81 #GRAVITY_LIST[user_planet_index]
 
-    F_net_y = F_gravity + F_air_y
+   # F_net_y = F_gravity + F_air_y
 
     #compute the momentum of the object
-    rho_x = r[4] + F_air_x * dt
-    rho_y = r[5] + F_net_y * dt
+    ##rho_x = r[4] + F_air_x * dt
+    ##rho_y = r[5] + F_net_y * dt
+
+    acel_x =  F_air /Mass * np.cos(theta)
+    acel_y =  F_gravity + (F_air /Mass * np.sin(theta))
+
+    velo_x = r[2] + acel_x * dt
+    velo_y = r[3] + acel_y * dt
 
     # compute the position of the ball
-    pos_x = r[0] + rho_x * dt / Mass
-    pos_y = r[1] + rho_y * dt / Mass
+    pos_x = r[0] + velo_x * dt
+    pos_y = r[1] + velo_y * dt
+
+    #print(dt)
 
     t += dt
 
-    return np.array([pos_x, pos_y, velo_x, velo_y, rho_x, rho_y, t], float)
+    return np.array([pos_x, pos_y, velo_x, velo_y, acel_x, acel_y, t], float)
 
     #When Weight == Drag it has reah ter,inal velocty https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/termv.html
 
@@ -119,14 +129,14 @@ def rk4(r_init, t, h):
     k3 = h * positionDrag((r + 0.5 * k2), (t + 0.5 * h))
     k4 = h * positionDrag((r+k3), (t+h))
  
-    r = ((k1+ 2*k2 + 2*k3 + k4) /6)
+    r = r + ((k1+ 2*k2 + 2*k3 + k4) /6)
  
     return r
 
 def adapative_size(r_init, a_init, b_init, change = 1):
     #set up
     r = r_init
-    h = (b_init - a_init) / 1
+    h = (b_init - a_init) / 1000
     t = a_init
 
     x_points.append(r[0])
@@ -148,13 +158,10 @@ def adapative_size(r_init, a_init, b_init, change = 1):
         r_half += rk4(r_half, t+h, h)
         r_full = r + rk4(r, t, 2*h)
         
-        R_cmp = r_half - r_full
+        R_cmp = np.abs(r_half - r_full)
         error = np.sqrt(R_cmp[0]**2 + R_cmp[1]**2)
 
-        if (error == 0):
-            rho = 3
-        else:
-            rho = 30 * h * change/ np.sqrt(R_cmp[0]**2 + R_cmp[1]**2)
+        rho = 30 * h * change/ np.sqrt(R_cmp[0]**2 + R_cmp[1]**2)
         
         
         if rho > 1:
@@ -166,14 +173,14 @@ def adapative_size(r_init, a_init, b_init, change = 1):
         
 def calcMaxHeightTime(theta):
     #https://phys.libretexts.org/Bookshelves/University_Physics/Physics_(Boundless)/3%3A_Two-Dimensional_Kinematics/3.3%3A_Projectile_Motion#:~:text=The%20range%20of%20an%20object,2%CE%B8i2g.
-    time = (V_Init * np.sin(theta)) /GRAVITY_LIST[user_planet_index] 
+    time = (2* V_Init * np.sin(theta)) /GRAVITY_LIST[user_planet_index] 
 
     return time
 
 
 if __name__ == '__main__':
 
-    theta = 30 * np.pi / 180
+    theta = np.radians(30)
     x_init = 0
     y_init = 0
     velo_x_init = 0
@@ -209,25 +216,61 @@ if __name__ == '__main__':
     """
 
     #ininital momentum
-    rho_x_init = Mass * V_Init * np.cos(theta)
-    rho_y_init = Mass * V_Init * np.sin(theta)
+   # rho_x_init = Mass * V_Init * np.cos(theta)
+    #rho_y_init = Mass * V_Init * np.sin(theta)
 
     #inital velocity 
-    velo_x_init = rho_x_init / Mass
-    velo_y_init = rho_y_init / Mass
+    velo_x_init = V_Init * np.cos(theta)
+    velo_y_init = V_Init * np.sin(theta)
 
     #get the max time that 
     MaxTime = calcMaxHeightTime(theta)
 
-    r = np.array([0, y_init, velo_x_init, velo_y_init, rho_x_init, rho_y_init, 0], float64)
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
     a = 0
-    b = MaxTime
+    b = 20 #MaxTime
 
-    adapative_size(r, a, b, change=accuracy)
+    t = 0
+    N = 1000
+    h = (b-a)/N
 
+    tpoints = np.arange(a, b, h)
+    count = 0
+    isbeing = True
+    
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_points.append(r[0])
+        y_points.append(r[1])
+        t_points.append(t)
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        print(r[1])
+
+        t += h
+        isbeing = False
+    
+    
+    
+    """
+    for t in tpoints:
+        x_points.append(r[0])
+        y_points.append(r[1])
+        t_points.append(t)
+
+        
+        k1 = h * positionDrag(r, t)
+        k2 = h * positionDrag((r + 0.5 * k1), (t + 0.5 * h))
+        k3 = h * positionDrag((r + 0.5 * k2), (t + 0.5 * h))
+        k4 = h * positionDrag((r+k3), (t+h))
+ 
+        r = r + (k1+ 2*k2 + 2*k3 + k4) /6
+    """
 
 
     # PLOT THE GIVEN INFORMATION
-    plt.plot(t_points, y_points, 'ro')
+    plt.plot(x_points, y_points)
+    #plt.plot(t_points, x_points, 'ro')
     plt.show()
     # SOME HOW GET THE WEBSITE THE INFORMATION

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 Mass = 5
 V_Init = 30
 Size = 1
-RADIUS = 0.5 * Size
+Radius = 0.5 * Size
 theta = 0
 
 # Air density of the planet
@@ -42,16 +42,13 @@ FLAT_PLATE_DRAG_COE = 1.28
 PRISM_DRAG_COE = 1.14
 
 #Cross section area
-SPHERE_CS = np.pi * RADIUS**2
-AIRFOIL_CS = 
-BULLET_CS = np.pi * RADIUS**2
-FLAT_PLATE_CS = Size * Size 
-PRISM_DRAG_COE = Size * Size 
+Sphere_CS = np.pi * Radius**2
+Airfoil_CS = Size * 0.25 * Size
+Bullet_CS = np.pi * Radius**2
+Flat_PLATE_CS = Size * Size 
+Prism_DRAG_CS = Size * Size 
 
-
-SA_BULLET_CONE = np.pi * RADIUS * np.sqrt(Size**2 + RADIUS**2)
-SA_BULLET_CYL = 2 * np.pi * RADIUS * Size + np.pi * RADIUS**2
-SA_BULLET = SA_BULLET_CONE + SA_BULLET_CYL
+print(Sphere_CS)
 
 
 
@@ -59,10 +56,10 @@ SA_BULLET = SA_BULLET_CONE + SA_BULLET_CYL
 AIR_DENSITY_LIST = np.array([NULL_DENSITY, EARTH_AIR_DENSITY, MOON_AIR_DENSITY, MARS_AIR_DENSITY, VENUS_AIR_DENSITY, JUPITER_AIR_DENSITY], float) # Putting all gravities from current densities into list
 GRAVITY_LIST = np.array([NULL_GRAVITY, EARTH_GRAVITY, MOON_GRAVITY, MARS_GRAVITY, VENUS_GRAVITY, JUPITER_GRAVITY], float) # Putting all gravities from current planets into list
 DRAG_LIST = np.array([SPHERE_DRAG_COE,AIRFOIL_DRAG_COE, BULLET_DRAG_COE, FLAT_PLATE_DRAG_COE, PRISM_DRAG_COE ])
-SHAPE_LIST = np.array([SPHERE_CS], float)
+Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DRAG_CS],  float)
 
 # The index of the user choices 
-user_planet_index = 1
+user_planet_index = 0
 user_shape_index = 0
 
 
@@ -88,7 +85,7 @@ def positionDrag(r, t):
     #unit_vector_y = velo_y / magnitude_velocity
 
     #F_air = -1/2 * p(air density) * Area * drag_Coeffeient * | v |^2 * unit_vector
-    F_air = -  0.5 * AIR_DENSITY_LIST[user_planet_index] * SHAPE_LIST[user_shape_index] * DRAG_LIST[user_shape_index] * velocity**2#*(magnitude_velocity**2)
+    F_air = -  0.5 * AIR_DENSITY_LIST[user_planet_index] * Shape_List[user_shape_index] * DRAG_LIST[user_shape_index] * velocity**2#*(magnitude_velocity**2)
 
     # comute the air resistance for x and y
    #F_air_x = F_air / Mass * np.cos(theta)
@@ -177,6 +174,19 @@ def calcMaxHeightTime(theta):
 
     return time
 
+def updateSize():
+
+    print("HI")
+    Radius = 0.5 * Size
+
+    #Cross section area
+    Sphere_CS = np.pi * Radius**2
+    Airfoil_CS = Size * 0.25 * Size
+    Bullet_CS = np.pi * Radius**2
+    Flat_PLATE_CS = Size * Size 
+    Prism_DRAG_CS = Size * Size 
+
+    Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DRAG_CS],  float)
 
 if __name__ == '__main__':
 
@@ -185,8 +195,6 @@ if __name__ == '__main__':
     y_init = 0
     velo_x_init = 0
     velo_y_init = 0
-    rho_x_init = 0
-    rho_y_init = 0
     MaxTime = 0
     accuracy = .01
 
@@ -220,6 +228,28 @@ if __name__ == '__main__':
     #rho_y_init = Mass * V_Init * np.sin(theta)
 
     #inital velocity 
+    theta = np.radians(45)
+    V_Init =  58.33     #fastest  soccer ball is kick
+    Mass = .45          #mass of a soccer ball
+    Size = 0.113 * 2    # d=iamater of a soccer ball
+
+    #print(Shape_List[0])
+
+    updateSize()
+
+    print(np.pi * (Size/2)**2)
+
+
+    user_planet_index = 1
+    user_shape_index = 0
+    
+    x_init = 0
+    y_init = 0
+    velo_x_init = 0
+    velo_y_init = 0
+
+
+
     velo_x_init = V_Init * np.cos(theta)
     velo_y_init = V_Init * np.sin(theta)
 
@@ -246,7 +276,7 @@ if __name__ == '__main__':
 
         #r = rk4(r, t, h)
         r = positionDrag(r, t)
-        print(r[1])
+        #print(r[1])
 
         t += h
         isbeing = False

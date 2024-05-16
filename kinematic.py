@@ -96,7 +96,7 @@ def positionDrag(r, t):
    #F_air_y = F_air / Mass * np.sin(theta)
 
     #calculate the gravity
-    F_gravity =  - GRAVITY_LIST[user_planet_index]
+    F_gravity =  - GRAVITY_LIST[1]
 
    # F_net_y = F_gravity + F_air_y
 
@@ -334,6 +334,7 @@ if __name__ == '__main__':
     tpoints = np.arange(a, b, h)
     count = 0
     isbeing = True
+    user_planet_index = 1
     
     while (r[1] >= 0 or isbeing == True):
     
@@ -347,7 +348,28 @@ if __name__ == '__main__':
 
         t += h
         isbeing = False
+    
+    #reset
+    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
+    t = 0
+    isbeing = True
+    user_planet_index = 0
 
+    while (r[1] >= 0 or isbeing == True):
+    
+        x_ball_moon.append(r[0])
+        y_ball_moon.append(r[1])
+        t_points.append(t)
+
+        #r = rk4(r, t, h)
+        r = positionDrag(r, t)
+        #print(r[1])
+
+        t += h
+        isbeing = False
+
+
+    """
     #reset
     r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
     t = 0
@@ -444,11 +466,11 @@ if __name__ == '__main__':
     user_planet_index = 2
     r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
     x_airfoil_moon, y_airfoil_moon = changeShape(r, h, 1)
-
+    """
 
 
     # PLOT THE GIVEN INFORMATION
-
+    """
     #ALL PLANET SAME SAHPE
     plt.plot(x_ball_earth, y_ball_earth, 'b', label="EARTH",)
     plt.plot(x_ball_moon, y_ball_moon, 'k', label="MOON")
@@ -482,18 +504,26 @@ if __name__ == '__main__':
     plt.title("Differnt Shape Object Launched from Earth")
     plt.legend(loc='upper right')
     plt.grid()
-
+    """
+    """
     #Airfoil on moon
     plt.figure()
     plt.plot(x_airfoil_moon, y_airfoil_moon, label="AIRFOIL")
     plt.plot(x_ball_moon, y_ball_moon, 'k', label="MOON")
     plt.xlabel("Distance in x-axis (m)")
     plt.ylabel("Distance in y-axis (m)")
-    plt.title("Differnt Shape Object Launched from Earth")
+    plt.title("Trajectory of a Sphere and Airfoil on the Moon")
     plt.legend(loc='upper right')
     plt.grid()
+    """
 
-
+    plt.plot(x_ball_earth, y_ball_earth, 'b', label="With Drag",)
+    plt.plot(x_ball_moon, y_ball_moon, 'k', label="Without Drag")
+    plt.xlabel("Distance in x-axis (m)")
+    plt.ylabel("Distance in y-axis (m)")
+    plt.title("The Effect of Drag on a Soccer Ball ")
+    plt.legend(loc='upper right')
+    plt.grid()
     #plt.plot(t_points, x_points, 'ro')
     plt.show()
     # SOME HOW GET THE WEBSITE THE INFORMATION

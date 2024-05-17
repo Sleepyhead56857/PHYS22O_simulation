@@ -2,7 +2,7 @@
 Author: Kelechi Agommuo, David Olufade, Rajjya Rhan Paudyal
 ID Numbers: XM33737, HP56857, SR3095
 Created: 9 April 2024
-
+Description: This program compute the projectile motion of an object in different enviroment accounting for drag
 
 
 """
@@ -42,21 +42,17 @@ FLAT_PLATE_DRAG_COE = 1.28
 PRISM_DRAG_COE = 1.14
 
 #Cross section area
-
 global Shape_List
 global Airfoil_CS
 global Bullet_CS
 global Flat_PLATE_CS
 global Prism_DRAG_CS
 
-Sphere_CS = np.pi * Radius**2
-Airfoil_CS = Size * 0.25 * Size
-Bullet_CS = np.pi * Radius**2
-Flat_PLATE_CS = Size * Size 
-Prism_DRAG_CS = Size * Size 
-
-print(Sphere_CS)
-
+Sphere_CS = np.pi * Radius**2       #m^2
+Airfoil_CS = Size * 0.25 * Size     #m^2
+Bullet_CS = np.pi * Radius**2       #m^2
+Flat_PLATE_CS = Size * Size         #m^2
+Prism_DRAG_CS = Size * Size         #m^2
 
 
 # List to hold selected planet information
@@ -65,44 +61,18 @@ GRAVITY_LIST = np.array([NULL_GRAVITY, EARTH_GRAVITY, MOON_GRAVITY, MARS_GRAVITY
 DRAG_LIST = np.array([SPHERE_DRAG_COE,AIRFOIL_DRAG_COE, BULLET_DRAG_COE, FLAT_PLATE_DRAG_COE, PRISM_DRAG_COE ])
 Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DRAG_CS],  float)
 
-# The index of the user choices 
-user_planet_index = 0
-user_shape_index = 0
 
-t_points = []
-
-
-
-
-# need to add function to account for
-    #   DRAG
-def positionDrag(r, t):
-    #print(GRAVITY_LIST[user_planet_index])
+def positionDrag(r, t, density_index, gravity_index, shape_index):
     #change in time
     dt = t - r[6] 
 
-
     velocity = np.sqrt(r[2] **2 + r[3]**2)
 
-    #calculate the unit vector of the x ad y axis
-    #unit_vector_x = velo_x / magnitude_velocity
-    #unit_vector_y = velo_y / magnitude_velocity
-
     #F_air = -1/2 * p(air density) * Area * drag_Coeffeient * | v |^2 * unit_vector
-    F_air = -  0.5 * AIR_DENSITY_LIST[user_planet_index] * Shape_List[user_shape_index] * DRAG_LIST[user_shape_index] * velocity**2#*(magnitude_velocity**2)
-
-    # comute the air resistance for x and y
-   #F_air_x = F_air / Mass * np.cos(theta)
-   #F_air_y = F_air / Mass * np.sin(theta)
+    F_air = -  0.5 * AIR_DENSITY_LIST[density_index] * Shape_List[shape_index] * DRAG_LIST[shape_index] * velocity**2
 
     #calculate the gravity
-    F_gravity =  - GRAVITY_LIST[1]
-
-   # F_net_y = F_gravity + F_air_y
-
-    #compute the momentum of the object
-    ##rho_x = r[4] + F_air_x * dt
-    ##rho_y = r[5] + F_net_y * dt
+    F_gravity =  - GRAVITY_LIST[gravity_index]
 
     acel_x =  F_air /Mass * np.cos(theta)
     acel_y =  F_gravity + (F_air /Mass * np.sin(theta))
@@ -114,13 +84,9 @@ def positionDrag(r, t):
     pos_x = r[0] + velo_x * dt
     pos_y = r[1] + velo_y * dt
 
-    #print(dt)
-
     t += dt
 
     return np.array([pos_x, pos_y, velo_x, velo_y, acel_x, acel_y, t], float)
-
-    #When Weight == Drag it has reah ter,inal velocty https://www.grc.nasa.gov/www/k-12/VirtualAero/BottleRocket/airplane/termv.html
 
 def rk4(r_init, t, h):
     r = r_init
@@ -134,50 +100,6 @@ def rk4(r_init, t, h):
  
     return r
 
-def adapative_size(r_init, a_init, b_init, change = 1):
-    #set up
-    r = r_init
-    h = (b_init - a_init) / 1000
-    t = a_init
-
-    x_points.append(r[0])
-    y_points.append(r[1])
-    t_points.append(t)
-
-    rho = 1
-
-    while (r[1] >= 0):
-
-        if rho < 2:
-            h *= rho**(1/4)
-        else:
-            h *= 2
-
-   
-        #calclute rho
-        r_half = r + rk4(r, t, h)
-        r_half += rk4(r_half, t+h, h)
-        r_full = r + rk4(r, t, 2*h)
-        
-        R_cmp = np.abs(r_half - r_full)
-        error = np.sqrt(R_cmp[0]**2 + R_cmp[1]**2)
-
-        rho = 30 * h * change/ np.sqrt(R_cmp[0]**2 + R_cmp[1]**2)
-        
-        
-        if rho > 1:
-            t += 2*h
-            r = r_half
-            x_points.append(r[0])
-            y_points.append(r[1])
-            t_points.append(t)
-        
-def calcMaxHeightTime(theta):
-    #https://phys.libretexts.org/Bookshelves/University_Physics/Physics_(Boundless)/3%3A_Two-Dimensional_Kinematics/3.3%3A_Projectile_Motion#:~:text=The%20range%20of%20an%20object,2%CE%B8i2g.
-    time = (2* V_Init * np.sin(theta)) /GRAVITY_LIST[user_planet_index] 
-
-    return time
-
 def updateSize():
     global Shape_List
     global Airfoil_CS
@@ -188,9 +110,7 @@ def updateSize():
     
     Radius = 0.5 * Size
 
-    print("r = ", Radius)
-
-    #Cross section area
+    # Compue Cross section area of a new shape
     Sphere_CS = np.pi * Radius**2
     Airfoil_CS = Size * 0.25 * Size
     Bullet_CS = np.pi * Radius**2
@@ -199,79 +119,58 @@ def updateSize():
 
     Shape_List = np.array([Sphere_CS, Airfoil_CS, Bullet_CS, Flat_PLATE_CS, Prism_DRAG_CS],  float)
 
-def changeShape(r, h, shape):
-    global user_shape_index
-
+def changeShape(r, h, density_index, gravity_index, shape_index):
+    r_curr = r
     x_points = []
     y_points = []
-    user_shape_index = shape
     t = 0
     isbeing = True
 
-    print("The shape", user_shape_index)
-    print("The planet", user_planet_index)
-
-    while (r[1] >= 0 or isbeing == True):
+    # Compute until the onject reaches the floor
+    while (r_curr[1] >= 0 or isbeing == True):
     
-        x_points.append(r[0])
-        y_points.append(r[1])
+        x_points.append(r_curr[0])
+        y_points.append(r_curr[1])
 
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
+        r_curr = positionDrag(r_curr, t, density_index, gravity_index, shape_index)
 
         t += h
         isbeing = False
 
     return x_points, y_points
+   
+def calcTrajectory(r, h, density_index, gravity_index, shape_index):
+    t = 0
+    r_curr = r
     
+    x_points = []
+    y_points = []
+    
+    # calculate until the object reaches the floor
+    while (r_curr[1] >= 0 or isbeing == True):
 
+        x_points.append(r_curr[0])
+        y_points.append(r_curr[1])
+    
+        r_curr = positionDrag(r_curr, t, density_index, gravity_index, shape_index)
 
-
+        t += h
+        isbeing = False
+        
+    return x_points, y_points
+      
 if __name__ == '__main__':
-    theta = np.radians(30)
+    
     x_init = 0
     y_init = 0
     velo_x_init = 0
     velo_y_init = 0
-    MaxTime = 0
-    accuracy = .01
+    theta = np.radians(45)  # Initial angle
+    V_Init =  58.33         # fastest  soccer ball is kick
+    Mass = .45              # mass of a soccer ball
+    Size = 0.113 * 2        # diamater of a soccer ball
 
-
-    """
-    # DEVELOPED USER INTERACTION TO CHANGE THE VARAIBLE
-    # User Input
-    user_inp = input("What planet would you like to select? (1-5)")
-
-    # Selecting planet info to append into list based on user choice
-    selected_planet.append(all_densities[int(user_inp) - 1])
-    selected_planet.append(all_gravities[int(user_inp) - 1])
-
-    MASS = float(input("Enter the object's mass (in kg): "))
-    V_INIT = float(input("Enter the initial velocity (in m/s): "))
-    
-
-    # Get the y position that user wants 
-    y_init = input("What height do you wan to start the ball?")
-
-    while(y_init.isnumeric() == False or y_init < 0):
-        print("Please enter a number equal or grater than 0")
-        y_init  = input("What height do you wan to start the ball?")
-
-    
-    theta = input("What angle do you want to lauch te object")
-    """
-
-    #ininital momentum
-   # rho_x_init = Mass * V_Init * np.cos(theta)
-    #rho_y_init = Mass * V_Init * np.sin(theta)
-
-    #inital velocity 
-    theta = np.radians(45)
-    V_Init =  58.33     #fastest  soccer ball is kick
-    Mass = .45          #mass of a soccer ball
-    Size = 0.113 * 2    # d=iamater of a soccer ball
-
+    #array of all the data
     x_ball_earth = []
     y_ball_earth = []
 
@@ -298,179 +197,99 @@ if __name__ == '__main__':
 
     x_prism = []
     y_prism = []
+    
+    x_airfoil_moon = []
+    y_airfoil_moon = []
+    
+    x_nodrag_earth = []
+    y_nodrag_earth = []
 
 
-    #print(Shape_List[0])
-    print("r = ", Radius)
     updateSize()
-
-    print(np.pi * (Size/2)**2)
 
 
     user_planet_index = 1
     user_shape_index = 0
-    
-    x_init = 0
-    y_init = 0
-    velo_x_init = 0
-    velo_y_init = 0
 
-
-
+    # calculate the velocity into x and y components
     velo_x_init = V_Init * np.cos(theta)
     velo_y_init = V_Init * np.sin(theta)
 
-    #get the max time that 
-    MaxTime = calcMaxHeightTime(theta)
-
     r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    a = 0
-    b = 20 #MaxTime
 
     t = 0
-    N = 10000
-    h = (b-a)/N
+    h = 0.001
 
-    tpoints = np.arange(a, b, h)
-    count = 0
-    isbeing = True
-    user_planet_index = 1
+
+    # density and gravity on earth using a sphere   
+    density_index = 1
+    gravity_index = 1
+    shape_index = 0
+    x_ball_earth, y_ball_earth = calcTrajectory(r, h, density_index, gravity_index, shape_index)
     
-    while (r[1] >= 0 or isbeing == True):
     
-        x_ball_earth.append(r[0])
-        y_ball_earth.append(r[1])
-        t_points.append(t)
-
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
-
-        t += h
-        isbeing = False
+    # density and gravity on moon using a sphere  
+    density_index = 2
+    gravity_index = 2
+    shape_index = 0
+    x_ball_moon, y_ball_moon = calcTrajectory(r, h, density_index, gravity_index, shape_index)
     
-    #reset
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 0
-
-    while (r[1] >= 0 or isbeing == True):
+    # density and gravity on mars using a sphere   
+    density_index = 3
+    gravity_index = 3
+    shape_index = 0
+    x_ball_mars, y_ball_mars = calcTrajectory(r, h, density_index, gravity_index, shape_index)
     
-        x_ball_moon.append(r[0])
-        y_ball_moon.append(r[1])
-        t_points.append(t)
-
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
-
-        t += h
-        isbeing = False
-
-
-    """
-    #reset
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 2
-
-    while (r[1] >= 0 or isbeing == True):
+    # density and gravity on venus using a sphere    
+    density_index = 4
+    gravity_index = 4
+    shape_index = 0
+    x_ball_venus, y_ball_venus = calcTrajectory(r, h, density_index, gravity_index, shape_index)
     
-        x_ball_moon.append(r[0])
-        y_ball_moon.append(r[1])
-        t_points.append(t)
-
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
-
-        t += h
-        isbeing = False
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 3
-
-    while (r[1] >= 0 or isbeing == True):
+    # density and gravity on jupiter using a sphere    
+    density_index = 5
+    gravity_index = 5
+    shape_index = 0
+    x_ball_jup, y_ball_jup = calcTrajectory(r, h, density_index, gravity_index, shape_index)
     
-        x_ball_mars.append(r[0])
-        y_ball_mars.append(r[1])
-        t_points.append(t)
-
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
-
-        t += h
-        isbeing = False
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 4
-
-    while (r[1] >= 0 or isbeing == True):
     
-        x_ball_venus.append(r[0])
-        y_ball_venus.append(r[1])
-        t_points.append(t)
+    #SHAPES ON EARTH
+    #using earth gravity and air density the shape will be change
+    density_index = 1
+    gravity_index = 1
 
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
+    # using a airfoil
+    shape_index = 1
+    x_airfoil, y_airfoil = changeShape(r, h, density_index, gravity_index, shape_index)
 
-        t += h
-        isbeing = False
+    # using a bullet
+    shape_index = 2
+    x_bullet, y_bullet = changeShape(r, h, density_index, gravity_index, shape_index)
 
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 5
+    # using flat plate
+    shape_index = 3
+    x_flat, y_flat = changeShape(r, h, density_index, gravity_index, shape_index)
 
-    while (r[1] >= 0 or isbeing == True):
+    # using a flat rectangular prism
+    shape_index = 4
+    x_prism, y_prism = changeShape(r, h, density_index, gravity_index, shape_index)
     
-        x_ball_jup.append(r[0])
-        y_ball_jup.append(r[1])
-        t_points.append(t)
-
-        #r = rk4(r, t, h)
-        r = positionDrag(r, t)
-        #print(r[1])
-
-        t += h
-        isbeing = False
-
-    #CHANGE OF SHAPE
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    t = 0
-    isbeing = True
-    user_planet_index = 1
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    x_airfoil, y_airfoil = changeShape(r, h, 1)
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    x_bullet, y_bullet = changeShape(r, h, 2)
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    x_flat, y_flat = changeShape(r, h, 3)
-
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    x_prism, y_prism = changeShape(r, h, 4)
-
-
+    
     #change in atomshere
-    user_planet_index = 2
-    r = np.array([0, y_init, velo_x_init, velo_y_init, 0, 0, 0], float)
-    x_airfoil_moon, y_airfoil_moon = changeShape(r, h, 1)
-    """
+    density_index = 2
+    gravity_index = 2
+    shape_index = 2
+    x_airfoil_moon, y_airfoil_moon = changeShape(r, h, density_index, gravity_index, shape_index)
+    
+    #earth with no drag
+    density_index = 0
+    gravity_index = 1
+    shape_index = 0
+    x_nodrag_earth, y_nodrag_earth = changeShape(r, h, density_index, gravity_index, shape_index)
 
 
     # PLOT THE GIVEN INFORMATION
-    """
+    
     #ALL PLANET SAME SAHPE
     plt.plot(x_ball_earth, y_ball_earth, 'b', label="EARTH",)
     plt.plot(x_ball_moon, y_ball_moon, 'k', label="MOON")
@@ -504,8 +323,7 @@ if __name__ == '__main__':
     plt.title("Differnt Shape Object Launched from Earth")
     plt.legend(loc='upper right')
     plt.grid()
-    """
-    """
+
     #Airfoil on moon
     plt.figure()
     plt.plot(x_airfoil_moon, y_airfoil_moon, label="AIRFOIL")
@@ -515,15 +333,15 @@ if __name__ == '__main__':
     plt.title("Trajectory of a Sphere and Airfoil on the Moon")
     plt.legend(loc='upper right')
     plt.grid()
-    """
-
+    
+    # COMPARE EFFECT OF DRAG ON EARTH
+    plt.figure()
     plt.plot(x_ball_earth, y_ball_earth, 'b', label="With Drag",)
-    plt.plot(x_ball_moon, y_ball_moon, 'k', label="Without Drag")
+    plt.plot(x_nodrag_earth, y_nodrag_earth, 'k', label="Without Drag")
     plt.xlabel("Distance in x-axis (m)")
     plt.ylabel("Distance in y-axis (m)")
     plt.title("The Effect of Drag on a Soccer Ball ")
     plt.legend(loc='upper right')
     plt.grid()
-    #plt.plot(t_points, x_points, 'ro')
+    
     plt.show()
-    # SOME HOW GET THE WEBSITE THE INFORMATION
